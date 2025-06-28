@@ -1,0 +1,217 @@
+// main.dart
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'screens/login_screen.dart';
+import 'screens/dashboard_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Clinic Management System',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+      ),
+      home: LoginScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// login_screen.dart
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dashboard_screen.dart';
+import 'register_screen.dart';
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+
+  void login() async {
+    setState(() => isLoading = true);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Login failed')),
+      );
+    }
+    setState(() => isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Login")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
+            TextField(controller: passwordController, obscureText: true, decoration: InputDecoration(labelText: "Password")),
+            SizedBox(height: 20),
+            isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(onPressed: login, child: Text("Login")),
+            TextButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen()));
+              },
+              child: Text("Don't have an account? Register"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// register_screen.dart
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class RegisterScreen extends StatelessWidget {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  void register(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Registered successfully!")));
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Registration failed")));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Register")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
+            TextField(controller: passwordController, obscureText: true, decoration: InputDecoration(labelText: "Password")),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: () => register(context), child: Text("Register")),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// dashboard_screen.dart
+import 'package:flutter/material.dart';
+import 'appointment_screen.dart';
+import 'patient_screen.dart';
+import 'doctor_screen.dart';
+import 'billing_screen.dart';
+
+class DashboardScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Dashboard")),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: EdgeInsets.all(16),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        children: [
+          ElevatedButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AppointmentScreen())),
+              child: Text("Appointments")),
+          ElevatedButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PatientScreen())),
+              child: Text("Patients")),
+          ElevatedButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DoctorScreen())),
+              child: Text("Doctors")),
+          ElevatedButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BillingScreen())),
+              child: Text("Billing")),
+        ],
+      ),
+    );
+  }
+}
+
+// appointment_screen.dart
+import 'package:flutter/material.dart';
+
+class AppointmentScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Appointments")),
+      body: Center(child: Text("Appointment List Here")),
+    );
+  }
+}
+
+// patient_screen.dart
+import 'package:flutter/material.dart';
+
+class PatientScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Patients")),
+      body: Center(child: Text("Patient List Here")),
+    );
+  }
+}
+
+// doctor_screen.dart
+import 'package:flutter/material.dart';
+
+class DoctorScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Doctors")),
+      body: Center(child: Text("Doctor List Here")),
+    );
+  }
+}
+
+// billing_screen.dart
+import 'package:flutter/material.dart';
+
+class BillingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Billing")),
+      body: Center(child: Text("Billing List Here")),
+    );
+  }
+}
